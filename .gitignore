@@ -1,44 +1,49 @@
+
 HELP.md
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
-### STS ###
-.apt_generated
+# Gradle (legacy files to be removed)
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+
+# Eclipse / Spring Tool Suite
+.apt_generated/
 .classpath
 .factorypath
 .project
-.settings
+.settings/
 .springBeans
-.sts4-cache
+.sts4-cache/
+bin/
 
-### IntelliJ IDEA ###
-.idea
+# IntelliJ IDEA
+.idea/
 *.iws
 *.iml
 *.ipr
+out/
 
-### NetBeans ###
+# NetBeans
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
-### VS Code ###
+# VS Code
 .vscode/
 
-#### these .gitignore entries help prevent sensitive information and 
-#### machine-specific configuration from being uploaded to your repository.
- 
-# Environment and secrets
+# Environment variables and secrets
 .env
 .env.*
 !.env.example
-### Ignores files whose names start with .env., such as .env.local and .env.production. Exception: allows .env.example to be tracked, even though it matches the preceding ignore rules.
+
 # Local configuration overrides
 application-local.properties
+
+# Local Maven cache
+.m2/
