@@ -24,6 +24,8 @@ public class UrlMapping
 	 private String originalUrl;
 	 @Column(nullable = false, updatable = false)
 	 private LocalDateTime createdAt;
+	 @Column(name = "expires_at")
+	 private LocalDateTime expiresAt;
 	 
 	 @PrePersist
 	 protected void onCreate() {
@@ -68,4 +70,12 @@ public class UrlMapping
 	 public Long getId() {
 		 return id;
 	 }
+	 
+	 public LocalDateTime getExpiresAt() {
+		    return expiresAt;
+		}
+
+		public void setExpiresAt(LocalDateTime expiresAt) {
+		    this.expiresAt = expiresAt;
+		} 	
 }

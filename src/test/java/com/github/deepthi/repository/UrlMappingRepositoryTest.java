@@ -1,5 +1,7 @@
 package com.github.deepthi.repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import org.junit.jupiter.api.Test;
@@ -64,4 +66,60 @@ public class UrlMappingRepositoryTest {
 
 	        assertThat(result).isEmpty();
 	    }
+	    
+
+		@Test
+		void shouldDeleteOnlyUrlsExpiredBeforeOrAtCutoff() {
+		
+		    LocalDateTime cutoff =
+		            LocalDateTime.of(2026, 10, 1, 0, 0);
+		
+		    UrlMapping expiredMapping = new UrlMapping(
+		            "cleanup01",
+		            "https://example.com/expired"
+		    );
+		    expiredMapping.setExpiresAt(cutoff.minusDays(1));
+		
+		    UrlMapping cutoffMapping = new UrlMapping(
+		            "cleanup02",
+		            "https://example.com/cutoff"
+		    );
+		    cutoffMapping.setExpiresAt(cutoff);
+		
+		    UrlMapping activeMapping = new UrlMapping(
+		            "cleanup03",
+		            "https://example.com/active"
+		    );
+		    activeMapping.setExpiresAt(cutoff.plusDays(1));
+		
+		    UrlMapping noExpiryMapping = new UrlMapping(
+		            "cleanup04",
+		            "https://example.com/no-expiry"
+		    );
+		
+		    urlMappingRepository.saveAll(List.of(
+		            expiredMapping,
+		            cutoffMapping,
+		            activeMapping,
+		            noExpiryMapping
+		    ));
+		
+		    int deletedCount =
+		            urlMappingRepository.deleteExpiredUrlsBefore(cutoff);
+		
+		    assertThat(deletedCount).isEqualTo(2);
+		
+		    assertThat(urlMappingRepository.findByShortCode("cleanup01"))
+		            .isEmpty();
+		
+		    assertThat(urlMappingRepository.findByShortCode("cleanup02"))
+		            .isEmpty();
+		
+		    assertThat(urlMappingRepository.findByShortCode("cleanup03"))
+		            .isPresent();
+		
+		    assertThat(urlMappingRepository.findByShortCode("cleanup04"))
+		            .isPresent();
+		}
+
 }

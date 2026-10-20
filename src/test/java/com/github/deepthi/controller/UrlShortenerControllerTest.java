@@ -38,7 +38,7 @@ public class UrlShortenerControllerTest {
 	        UrlMapping mapping =
 	                new UrlMapping(shortCode, originalUrl);
 
-	        when(urlMappingService.createShortUrl(originalUrl))
+	        when(urlMappingService.createShortUrl(originalUrl, null ,null))
 	                .thenReturn(mapping);
 
 	        mockMvc.perform(post("/api/urls")
@@ -54,7 +54,7 @@ public class UrlShortenerControllerTest {
 	                .andExpect(jsonPath("$.shortUrl")
 	                        .value(org.hamcrest.Matchers.endsWith("/" + shortCode)));
 
-	        verify(urlMappingService).createShortUrl(originalUrl);
+	        verify(urlMappingService).createShortUrl(originalUrl, null, null);
 	    }
 
 	    @Test
@@ -100,7 +100,7 @@ public class UrlShortenerControllerTest {
 
 	        String invalidUrl = "not-a-valid-url";
 
-	        when(urlMappingService.createShortUrl(invalidUrl))
+	        when(urlMappingService.createShortUrl(invalidUrl,null, null))
 	                .thenThrow(new IllegalArgumentException(
 	                        "Please provide a valid HTTP or HTTPS URL."));
 
@@ -160,6 +160,61 @@ void createShortUrlShouldReturnCustomValidationErrorForBlankUrl()
                     .value("Original URL must not be empty."));
 
     org.mockito.Mockito.verifyNoInteractions(urlMappingService);
+}
+
+@Test
+void createShortUrlShouldPassCustomAliasToService() throws Exception {
+
+    String originalUrl = "https://example.com/products";
+    String customAlias = "products1";
+
+    UrlMapping mapping = new UrlMapping(customAlias, originalUrl);
+
+    when(urlMappingService.createShortUrl(
+            originalUrl, null, customAlias))
+            .thenReturn(mapping);
+
+    mockMvc.perform(post("/api/urls")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("""
+                    {
+                        "originalUrl": "https://example.com/products",
+                        "customAlias": "products1"
+                    }
+                    """))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.shortCode").value(customAlias))
+            .andExpect(jsonPath("$.originalUrl").value(originalUrl));
+
+    verify(urlMappingService)
+            .createShortUrl(originalUrl, null, customAlias);
+}
+
+@Test
+void createShortUrlShouldRejectInvalidCustomAlias() throws Exception {
+
+    String originalUrl = "https://www.google.com";
+    String invalidAlias = "google_123";
+
+    when(urlMappingService.createShortUrl(
+            originalUrl, null, invalidAlias))
+            .thenThrow(new IllegalArgumentException(
+                    "Custom alias can contain only letters and numbers."));
+
+    mockMvc.perform(post("/api/urls")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content("""
+                    {
+                        "originalUrl": "https://www.google.com",
+                        "customAlias": "google_123"
+                    }
+                    """))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message")
+                    .value("Custom alias can contain only letters and numbers."));
+
+    verify(urlMappingService)
+            .createShortUrl(originalUrl, null, invalidAlias);
 }
 
 }
