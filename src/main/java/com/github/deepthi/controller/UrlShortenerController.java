@@ -2,6 +2,8 @@ package com.github.deepthi.controller;
 
 import java.net.URI;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -92,6 +95,39 @@ public class UrlShortenerController {
 		
 		    return ResponseEntity.noContent().build();
 		}
+		@GetMapping("/api/urls")
+		public ResponseEntity<Page<CreateShortUrlResponse>> getAllUrls(
+		        @RequestParam(defaultValue = "0") int page,
+		        @RequestParam(defaultValue = "10") int size) {
 
+		    if (page < 0) {
+		        throw new IllegalArgumentException("Page number cannot be negative");
+		    }
+
+		    if (size < 1 || size > 100) {
+		        throw new IllegalArgumentException(
+		                "Page size must be between 1 and 100");
+		    }
+
+		    Page<UrlMapping> urlPage = urlMappingService.getAllUrls(
+		            PageRequest.of(page, size));
+
+		    Page<CreateShortUrlResponse> responsePage = urlPage.map(mapping -> {
+		        String shortUrl = ServletUriComponentsBuilder
+		                .fromCurrentContextPath()
+		                .path("/{shortCode}")
+		                .buildAndExpand(mapping.getShortCode())
+		                .toUriString();
+
+		        return new CreateShortUrlResponse(
+		                mapping.getShortCode(),
+		                shortUrl,
+		                mapping.getOriginalUrl(),
+		                mapping.getCreatedAt(),
+		                mapping.getExpiresAt());
+		    });
+
+		    return ResponseEntity.ok(responsePage);
+		}
 
 }

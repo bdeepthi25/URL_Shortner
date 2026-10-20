@@ -1,7 +1,9 @@
 package com.github.deepthi.controller;
 
 
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -9,10 +11,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
@@ -216,5 +222,90 @@ void createShortUrlShouldRejectInvalidCustomAlias() throws Exception {
     verify(urlMappingService)
             .createShortUrl(originalUrl, null, invalidAlias);
 }
+
+
+@Test
+void getAllUrlsShouldReturnPaginatedResults() throws Exception {
+
+    UrlMapping mapping = new UrlMapping(
+            "aB7xK2pQ",
+            "https://example.com/products");
+
+    when(urlMappingService.getAllUrls(any(Pageable.class)))
+            .thenReturn(new PageImpl<>(
+                    List.of(mapping),
+                    PageRequest.of(1, 2),
+                    5));
+
+    mockMvc.perform(get("/api/urls")
+            .param("page", "1")
+            .param("size", "2"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content[0].shortCode")
+                    .value("aB7xK2pQ"))
+            .andExpect(jsonPath("$.content[0].originalUrl")
+                    .value("https://example.com/products"))
+            .andExpect(jsonPath("$.content[0].shortUrl")
+                    .value(org.hamcrest.Matchers.endsWith("/aB7xK2pQ")))
+            .andExpect(jsonPath("$.number").value(1))
+            .andExpect(jsonPath("$.size").value(2))
+            .andExpect(jsonPath("$.totalElements").value(5))
+            .andExpect(jsonPath("$.totalPages").value(3));
+
+    verify(urlMappingService).getAllUrls(PageRequest.of(1, 2));
+}
+
+@Test
+void getAllUrlsShouldUseDefaultPagination() throws Exception {
+
+    when(urlMappingService.getAllUrls(any(Pageable.class)))
+            .thenReturn(new PageImpl<>(
+                    List.of(),
+                    PageRequest.of(0, 10),
+                    0));
+
+    mockMvc.perform(get("/api/urls"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.number").value(0))
+            .andExpect(jsonPath("$.size").value(10))
+            .andExpect(jsonPath("$.totalElements").value(0));
+
+    verify(urlMappingService).getAllUrls(PageRequest.of(0, 10));
+}
+
+@Test
+void getAllUrlsShouldReturn400ForNegativePage() throws Exception {
+
+    mockMvc.perform(get("/api/urls")
+            .param("page", "-1")
+            .param("size", "10"))
+            .andExpect(status().isBadRequest());
+
+    verifyNoInteractions(urlMappingService);
+}
+
+@Test
+void getAllUrlsShouldReturn400ForZeroSize() throws Exception {
+
+    mockMvc.perform(get("/api/urls")
+            .param("page", "0")
+            .param("size", "0"))
+            .andExpect(status().isBadRequest());
+
+    verifyNoInteractions(urlMappingService);
+}
+
+@Test
+void getAllUrlsShouldReturn400WhenSizeExceeds100() throws Exception {
+
+    mockMvc.perform(get("/api/urls")
+            .param("page", "0")
+            .param("size", "101"))
+            .andExpect(status().isBadRequest());
+
+    verifyNoInteractions(urlMappingService);
+}
+
+
 
 }
