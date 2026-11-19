@@ -1,7 +1,9 @@
 package com.github.deepthi.exception;
 
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -34,21 +36,40 @@ public class GlobalExceptionHandler {
 	                .body(errorResponse);
 	    }
 	 @ExceptionHandler(MethodArgumentNotValidException.class)
-	 public ResponseEntity<Map<String, String>> handleValidationException(MethodArgumentNotValidException exception)
-	 {
+	 public ResponseEntity<Map<String, String>> handleValidationException(
+	         MethodArgumentNotValidException exception) {
 
-		    String message = "Invalid request.";
+	     String message = exception.getBindingResult()
+	             .getFieldErrors()
+	             .stream()
+	             .map(FieldError::getDefaultMessage)
+	             .filter(error -> error != null)
+	             .distinct()
+	             .collect(Collectors.joining("; "));
 
-		    FieldError fieldError = exception.getBindingResult().getFieldError();
-		    if (fieldError != null && fieldError.getDefaultMessage() != null) {
-		        message = fieldError.getDefaultMessage();
-		    }
+	     if (message.isBlank()) {
+	         message = "Invalid request.";
+	     }
 
-		    Map<String, String> errorResponse = Map.of(
-		            "error", "Bad Request",
-		            "message", message);
+	     Map<String, String> errorResponse = Map.of(
+	             "error", "Bad Request",
+	             "message", message
+	     );
 
-		    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-		            .body(errorResponse);
+	     return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+	             .body(errorResponse);
+	 }
+	 @ExceptionHandler(DataIntegrityViolationException.class)
+	 public ResponseEntity<Map<String, String>> handleDataIntegrityViolation(
+	         DataIntegrityViolationException exception) {
+
+	     Map<String, String> errorResponse = Map.of(
+	             "error", "Conflict",
+	             "message", "The requested resource conflicts with existing data."
+	     );
+
+	     return ResponseEntity
+	             .status(HttpStatus.CONFLICT)
+	             .body(errorResponse);
 	 }
 }

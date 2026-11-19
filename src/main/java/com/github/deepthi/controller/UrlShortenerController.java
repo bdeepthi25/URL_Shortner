@@ -1,9 +1,11 @@
 package com.github.deepthi.controller;
 
 import java.net.URI;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -18,7 +20,10 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.github.deepthi.dto.CreateShortUrlRequest;
 import com.github.deepthi.dto.CreateShortUrlResponse;
+import com.github.deepthi.dto.DailyClickStatsResponse;
+import com.github.deepthi.dto.UrlClickStatsResponse;
 import com.github.deepthi.entity.UrlMapping;
+import com.github.deepthi.service.UrlClickService;
 import com.github.deepthi.service.UrlMappingService;
 
 import jakarta.validation.Valid;
@@ -26,11 +31,15 @@ import jakarta.validation.Valid;
 @RestController
 public class UrlShortenerController {
 	   private final UrlMappingService urlMappingService;
-	   public UrlShortenerController(UrlMappingService urlMappingService)
-	   {
-		   this.urlMappingService = urlMappingService;
-	   }
-	   
+	   private final UrlClickService urlClickService;
+	   public UrlShortenerController(
+		        UrlMappingService urlMappingService,
+		        UrlClickService urlClickService) {
+
+		    this.urlMappingService = urlMappingService;
+		    this.urlClickService = urlClickService;
+		}
+
 	   @PostMapping("/api/urls")
 	    public ResponseEntity<CreateShortUrlResponse> createShortUrl(@Valid @RequestBody CreateShortUrlRequest request)
 	    {
@@ -47,52 +56,52 @@ public class UrlShortenerController {
 				   															mapping.getExpiresAt());
 		   return ResponseEntity.status(HttpStatus.CREATED).body(response);
 	    }
-	   @GetMapping("/{shortCode}")
-	    public ResponseEntity<Void> redirectToOriginalUrl(
-	            @PathVariable String shortCode) {
+//	   @GetMapping("/{shortCode}")
+//	    public ResponseEntity<Void> redirectToOriginalUrl(
+//	            @PathVariable String shortCode) {
+//
+//	        UrlMapping mapping =
+//	                urlMappingService.getOriginalUrl(shortCode);
+//
+//	        return ResponseEntity
+//	                .status(HttpStatus.FOUND)
+//	                .location(URI.create(mapping.getOriginalUrl()))
+//	                .build();
+//	    }
 
-	        UrlMapping mapping =
-	                urlMappingService.getOriginalUrl(shortCode);
-
-	        return ResponseEntity
-	                .status(HttpStatus.FOUND)
-	                .location(URI.create(mapping.getOriginalUrl()))
-	                .build();
-	    }
-	   
 
 		@PutMapping("/api/urls/{shortCode}")
 		public ResponseEntity<CreateShortUrlResponse> updateShortUrl(
 		        @PathVariable String shortCode,
 		        @Valid @RequestBody CreateShortUrlRequest request) {
-		
+
 		    UrlMapping mapping = urlMappingService.updateOriginalUrl(
 		            shortCode,
 		            request.getOriginalUrl());
-		
+
 		    String shortUrl = ServletUriComponentsBuilder
 		            .fromCurrentContextPath()
 		            .path("/{shortCode}")
 		            .buildAndExpand(mapping.getShortCode())
 		            .toUriString();
-		
+
 		    CreateShortUrlResponse response = new CreateShortUrlResponse(
 		            mapping.getShortCode(),
 		            shortUrl,
 		            mapping.getOriginalUrl(),
 		            mapping.getCreatedAt(),
 		            mapping.getExpiresAt());
-		
+
 		    return ResponseEntity.ok(response);
 		}
-		
+
 
 		@DeleteMapping("/api/urls/{shortCode}")
 		public ResponseEntity<Void> deleteShortUrl(
 		        @PathVariable String shortCode) {
-		
+
 		    urlMappingService.deleteShortUrl(shortCode);
-		
+
 		    return ResponseEntity.noContent().build();
 		}
 		@GetMapping("/api/urls")
@@ -110,7 +119,7 @@ public class UrlShortenerController {
 		    }
 
 		    Page<UrlMapping> urlPage = urlMappingService.getAllUrls(
-		            PageRequest.of(page, size));
+		            PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "id")));
 
 		    Page<CreateShortUrlResponse> responsePage = urlPage.map(mapping -> {
 		        String shortUrl = ServletUriComponentsBuilder
@@ -128,6 +137,41 @@ public class UrlShortenerController {
 		    });
 
 		    return ResponseEntity.ok(responsePage);
+		}
+
+
+		@GetMapping("/{shortCode}")
+		public ResponseEntity<Void> redirectToOriginalUrl(
+		        @PathVariable String shortCode) {
+
+		    UrlMapping mapping =
+		            urlMappingService.getOriginalUrl(shortCode);
+
+		    urlClickService.recordClick(mapping);
+
+		    return ResponseEntity
+		            .status(HttpStatus.FOUND)
+		            .location(URI.create(mapping.getOriginalUrl()))
+		            .build();
+		}
+
+
+
+		@GetMapping("/api/urls/{shortCode}/stats")
+		public ResponseEntity<UrlClickStatsResponse> getUrlClickStats(
+		        @PathVariable String shortCode) {
+
+			   // Validate that the short URL exists and has not expired.
+		    urlMappingService.getOriginalUrl(shortCode);
+		    long totalClicks = urlClickService.getTotalClicks(shortCode);
+		    // Get daily click statistics.
+		    List<DailyClickStatsResponse> dailyClicks =
+		            urlClickService.getDailyClicks(shortCode);
+
+		    UrlClickStatsResponse response =
+		            new UrlClickStatsResponse(shortCode, totalClicks, dailyClicks);
+
+		    return ResponseEntity.ok(response);
 		}
 
 }

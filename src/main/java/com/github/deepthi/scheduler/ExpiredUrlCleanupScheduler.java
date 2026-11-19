@@ -11,23 +11,37 @@ import com.github.deepthi.service.UrlMappingService;
 
 @Component
 public class ExpiredUrlCleanupScheduler {
-	 private static final Logger logger =
-	            LoggerFactory.getLogger(ExpiredUrlCleanupScheduler.class);
+//	 private static final Logger logger =
+//	            LoggerFactory.getLogger(ExpiredUrlCleanupScheduler.class);
+//
+//	    private final UrlMappingService urlMappingService;
+//
+//	    public ExpiredUrlCleanupScheduler(
+//	            UrlMappingService urlMappingService)
+//
+//	    {
+//	        this.urlMappingService = urlMappingService;
+//	    }
+//
+//	    @Scheduled(cron = "${url.cleanup.cron}")
+//	    public void cleanupExpiredUrls()
+//	    {
+//	        int deletedCount = urlMappingService.cleanupExpiredUrls();
+//
+//	        logger.info(
+//	        	    "Expired URL cleanup completed. Deleted {} records.",
+//	        	    deletedCount
+//	        	);
+//	    }
 
-	    private final UrlMappingService urlMappingService;
+	 private final UrlMappingService urlMappingService;
 
-	    public ExpiredUrlCleanupScheduler(
-	            UrlMappingService urlMappingService) 
-	    
-	    {
+	    public ExpiredUrlCleanupScheduler(UrlMappingService urlMappingService) {
 	        this.urlMappingService = urlMappingService;
 	    }
 
 	    @Scheduled(cron = "${url.cleanup.cron}")
-	    public void cleanupExpiredUrls() 
-	    {
-	        int deletedCount = urlMappingService.cleanupExpiredUrls();
-
-	        logger.info("Expired URL cleanup completed. Deleted {} records.");
+	    public void cleanupExpiredUrls() {
+	        urlMappingService.cleanupExpiredUrls();
 	    }
 }

@@ -13,7 +13,7 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "url_mapping")
-public class UrlMapping 
+public class UrlMapping
 {
 	 @Id
 	 @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,26 +26,40 @@ public class UrlMapping
 	 private LocalDateTime createdAt;
 	 @Column(name = "expires_at")
 	 private LocalDateTime expiresAt;
-	 
+
 	 @PrePersist
 	 protected void onCreate() {
 	     if (createdAt == null) {
 	         createdAt = LocalDateTime.now();
 	     }
 	 }
-	 
-	 /*One detail to understand: LocalDateTime.now() uses the JVM's default timezone. 
-	  * The value does not contain timezone information, 
+
+	 /*One detail to understand: LocalDateTime.now() uses the JVM's default timezone.
+	  * The value does not contain timezone information,
 	  * so we'll need to be consistent about timezone handling as the project grows.*/
-	 
+
 	 protected UrlMapping() {
-		 
+
 	 }
-	 public UrlMapping(String shortCode, String originalUrl) 
+	 public UrlMapping(String shortCode, String originalUrl)
 	 {
 		    this.shortCode = shortCode;
 		    this.originalUrl = originalUrl;
 	}
+
+	 public UrlMapping(
+		        Long id,
+		        String shortCode,
+		        String originalUrl,
+		        LocalDateTime createdAt,
+		        LocalDateTime expiresAt) {
+
+		    this.id = id;
+		    this.shortCode = shortCode;
+		    this.originalUrl = originalUrl;
+		    this.createdAt = createdAt;
+		    this.expiresAt = expiresAt;
+		}
 
 	 public String getShortCode() {
 		 return shortCode;
@@ -70,12 +84,12 @@ public class UrlMapping
 	 public Long getId() {
 		 return id;
 	 }
-	 
+
 	 public LocalDateTime getExpiresAt() {
 		    return expiresAt;
 		}
 
 		public void setExpiresAt(LocalDateTime expiresAt) {
 		    this.expiresAt = expiresAt;
-		} 	
+		}
 }

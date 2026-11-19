@@ -47,3 +47,14 @@ application-local.properties
 
 # Local Maven cache
 .m2/
+
+application-*.properties
+!application.properties
+
+*.pem
+*.key
+*.p12
+*.jks
+
+# Generated Maven test logs
+maven-test-log*.txt

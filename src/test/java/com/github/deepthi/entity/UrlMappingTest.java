@@ -3,10 +3,10 @@ package com.github.deepthi.entity;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
-public class UrlMappingTest 
+public class UrlMappingTest
 {
 	    @Test
-	    void constructorShouldInitializeUrlFields() 
+	    void constructorShouldInitializeUrlFields()
 	    {
 
 	        UrlMapping mapping = new UrlMapping(

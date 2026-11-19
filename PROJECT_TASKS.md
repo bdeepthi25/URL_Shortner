@@ -181,34 +181,62 @@ Task ID	Task / Subtask	Brief explanation
 8.4.2	Test write-heavy workloads	Simulate many URL creation requests.
 8.4.3	Measure cache effectiveness	Compare performance with and without caching.
 8.5	Document scalability limits	Identify database, cache, and application bottlenecks.
-Phase 9: Logging, Monitoring, and Operations
-Goal: Make the service easier to troubleshoot and operate.
-Task ID	Task / Subtask	Brief explanation
-9.1	Add structured logging	Log useful events with consistent fields.
-9.1.1	Log URL creation outcomes	Record success and failure without logging sensitive data unnecessarily.
-9.1.2	Log redirect failures	Help investigate missing or expired links.
-9.1.3	Add correlation IDs	Connect related logs belonging to the same request.
-9.2	Add health checks	Verify application health and required dependencies.
-9.2.1	Configure Spring Boot Actuator	Expose health and other operational endpoints.
-9.2.2	Check database health	Detect database connectivity problems.
-9.2.3	Check Redis health	Detect cache connectivity problems when Redis is enabled.
-9.3	Add metrics	Measure request volume, latency, errors, and cache performance.
-9.4	Manage configuration securely	Keep credentials and environment-specific values outside source code.
-9.4.1	Configure environment variables	Supply database credentials and application settings at runtime.
-9.4.2	Separate development and production configuration	Avoid using development settings in production.
-9.4.3	Review sensitive logging	Prevent passwords, tokens, and sensitive data from entering logs.
-Phase 10: Docker, Deployment, and GitHub Portfolio
-Goal: Package the application and make the project reproducible and presentable.
-Task ID	Task / Subtask	Brief explanation
-10.1	Create a Dockerfile	Package the Spring Boot application into a container image.
-10.2	Create Docker Compose configuration	Run the application, PostgreSQL, and optionally Redis together.
-10.3	Configure persistent database storage	Preserve database data across container restarts.
-10.4	Test a clean startup	Verify the application can be launched from the documented setup.
-10.5	Choose a deployment platform	Select a hosting service suitable for the application and budget.
-10.6	Deploy the application	Configure production environment variables and database access.
-10.7	Verify deployed endpoints	Test URL creation and redirection in the deployed environment.
-10.8	Create a complete README	Document setup, configuration, endpoints, examples, and limitations.
-10.9	Create an architecture diagram	Show the client, application layers, database, and Redis if used.
-10.10	Document design decisions	Explain code generation, HTTP redirects, caching, expiry, and error handling.
-10.11	Maintain clean Git history	Commit meaningful changes with clear messages.
-10.12	Prepare interview explanations	Explain architecture, trade-offs, failure cases, and scalability choices.
+Phase 9 – Security Enhancements
+Partially completed
+
+Goal: Secure the application and understand authentication and authorization.
+- 9.1 Spring Security integration
+- 9.2 Admin authentication
+- 9.3 BCrypt password encoding
+- 9.4 Stateless HTTP Basic authentication
+- 9.5 Public and admin endpoint authorization
+- 9.6 Security testing (401, 200, 201, 204)
+- 9.7 Input validation and security review
+- 9.8 Security configuration and credential management
+
+  Phase 10 – Logging, Monitoring, and Operations
+  Pending
+
+  Goal: Make the service easier to troubleshoot and operate.
+- 10.1 Structured logging
+  - 10.1.1 URL creation outcomes
+  - 10.1.2 Redirect failures
+  - 10.1.3 Correlation IDs
+- 10.2 Health checks
+  - 10.2.1 Spring Boot Actuator
+  - 10.2.2 Database health
+  - 10.2.3 Redis health
+- 10.3 Metrics
+- 10.4 Configuration management
+  - 10.4.1 Environment variables
+  - 10.4.2 Development and production profiles
+  - 10.4.3 Sensitive logging review
+
+    Phase 11 – Docker, Deployment, and GitHub Portfolio
+    Pending
+
+    Goal: Package, deploy, and present the application professionally.
+- 11.1 Production preparation
+- 11.2 Dockerfile
+- 11.3 Docker image
+- 11.4 Docker Compose
+  - PostgreSQL container
+  - Redis container
+  - Spring Boot container
+  - Persistent volumes
+- 11.5 Docker integration testing
+- 11.6 GitHub repository preparation
+- 11.7 README and architecture diagram
+- 11.8 Deployment
+- 11.9 Production endpoint testing
+
+  Phase 12 – Swagger/OpenAPI Documentation
+  Pending
+
+  Goal: Provide professional, interactive API documentation.
+- 12.1 SpringDoc dependency
+- 12.2 OpenAPI configuration
+- 12.3 API endpoint documentation
+- 12.4 Request and response examples
+- 12.5 Swagger UI testing
+- 12.6 Swagger authentication configuration

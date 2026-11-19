@@ -4,13 +4,17 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 //import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+import org.springframework.dao.DataIntegrityViolationException;
 
+import com.github.deepthi.entity.UrlClick;
 import com.github.deepthi.entity.UrlMapping;
 
 @DataJpaTest
@@ -66,60 +70,103 @@ public class UrlMappingRepositoryTest {
 
 	        assertThat(result).isEmpty();
 	    }
-	    
+
 
 		@Test
 		void shouldDeleteOnlyUrlsExpiredBeforeOrAtCutoff() {
-		
+
 		    LocalDateTime cutoff =
 		            LocalDateTime.of(2026, 10, 1, 0, 0);
-		
+
 		    UrlMapping expiredMapping = new UrlMapping(
 		            "cleanup01",
 		            "https://example.com/expired"
 		    );
 		    expiredMapping.setExpiresAt(cutoff.minusDays(1));
-		
+
 		    UrlMapping cutoffMapping = new UrlMapping(
 		            "cleanup02",
 		            "https://example.com/cutoff"
 		    );
 		    cutoffMapping.setExpiresAt(cutoff);
-		
+
 		    UrlMapping activeMapping = new UrlMapping(
 		            "cleanup03",
 		            "https://example.com/active"
 		    );
 		    activeMapping.setExpiresAt(cutoff.plusDays(1));
-		
+
 		    UrlMapping noExpiryMapping = new UrlMapping(
 		            "cleanup04",
 		            "https://example.com/no-expiry"
 		    );
-		
+
 		    urlMappingRepository.saveAll(List.of(
 		            expiredMapping,
 		            cutoffMapping,
 		            activeMapping,
 		            noExpiryMapping
 		    ));
-		
+
 		    int deletedCount =
 		            urlMappingRepository.deleteExpiredUrlsBefore(cutoff);
-		
+
 		    assertThat(deletedCount).isEqualTo(2);
-		
+
 		    assertThat(urlMappingRepository.findByShortCode("cleanup01"))
 		            .isEmpty();
-		
+
 		    assertThat(urlMappingRepository.findByShortCode("cleanup02"))
 		            .isEmpty();
-		
+
 		    assertThat(urlMappingRepository.findByShortCode("cleanup03"))
 		            .isPresent();
-		
+
 		    assertThat(urlMappingRepository.findByShortCode("cleanup04"))
 		            .isPresent();
 		}
+
+		@Test
+		void shouldRejectDuplicateShortCode() {
+		    UrlMapping first = new UrlMapping(
+		        "duplicate1",
+		        "https://example.com/first"
+		    );
+
+		    UrlMapping second = new UrlMapping(
+		        "duplicate1",
+		        "https://example.com/second"
+		    );
+
+		    urlMappingRepository.saveAndFlush(first);
+
+		    assertThatThrownBy(() ->
+		        urlMappingRepository.saveAndFlush(second)
+		    ).isInstanceOf(DataIntegrityViolationException.class);
+		}
+		@Test
+		void shouldRejectNullShortCode() {
+		    UrlMapping mapping = new UrlMapping(
+		        null,
+		        "https://example.com/page"
+		    );
+
+		    assertThatThrownBy(() ->
+		        urlMappingRepository.saveAndFlush(mapping)
+		    ).isInstanceOf(DataIntegrityViolationException.class);
+		}
+
+		@Test
+		void shouldRejectNullOriginalUrl() {
+		    UrlMapping mapping = new UrlMapping(
+		        "valid123",
+		        null
+		    );
+
+		    assertThatThrownBy(() ->
+		        urlMappingRepository.saveAndFlush(mapping)
+		    ).isInstanceOf(DataIntegrityViolationException.class);
+		}
+
 
 }
